@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useFiltros } from '../contexts/FilterContext';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
@@ -33,13 +34,22 @@ const columns = [
 ];
 
 export default function CompetenciaPage() {
-  const [filtros, setFiltros] = useState<FiltrosDashboard>({});
-  const [data, setData] = useState<ProducaoCompetencia[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { filtros, setFiltros } = useFiltros();
+  const [data, setData] = useState<ProducaoCompetencia[]>(
+    () => producaoService.getPorCompetenciaFromCache(filtros)
+  );
+  const [loading, setLoading] = useState(data.length === 0);
 
   useEffect(() => {
+    const cached = producaoService.getPorCompetenciaFromCache(filtros);
+    if (cached.length > 0) {
+      setData(cached);
+      setLoading(false);
+      void producaoService.getPorCompetencia(filtros).then(setData).catch(() => {});
+      return;
+    }
     setLoading(true);
-    producaoService.getPorCompetencia(filtros)
+    void producaoService.getPorCompetencia(filtros)
       .then(setData)
       .finally(() => setLoading(false));
   }, [filtros]);
@@ -49,6 +59,7 @@ export default function CompetenciaPage() {
     registros: d.total_registros,
     valor: d.total_valor_aprovado,
   }));
+  const hasSinglePoint = chartData.length === 1;
 
   return (
     <Layout title="Produção por Competência" subtitle="Evolução mensal da produção">
@@ -81,15 +92,24 @@ export default function CompetenciaPage() {
               />
               <Tooltip
                 contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-                formatter={(value, name) =>
-                  String(name) === 'valor'
+                formatter={(value, _name, item) =>
+                  String(item?.dataKey) === 'valor'
                     ? [formatCurrency(Number(value ?? 0)), 'Valor Aprovado']
                     : [formatNumber(Number(value ?? 0)), 'Registros']
                 }
               />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar yAxisId="left" dataKey="registros" fill="#3b82f6" radius={[3, 3, 0, 0]} maxBarSize={28} name="Registros" />
-              <Line yAxisId="right" type="monotone" dataKey="valor" stroke="#10b981" strokeWidth={2} dot={false} name="Valor (R$)" />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="valor"
+                stroke="#10b981"
+                strokeWidth={2}
+                dot={hasSinglePoint ? { r: 5, strokeWidth: 2, fill: '#10b981', stroke: '#ffffff' } : false}
+                activeDot={{ r: 6 }}
+                name="Valor (R$)"
+              />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
