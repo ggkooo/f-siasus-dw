@@ -1,73 +1,137 @@
-# React + TypeScript + Vite
+# f-siasus-dw
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend dashboard built with React + TypeScript + Vite to consume the SIA/SUS Data Warehouse API.
 
-Currently, two official plugins are available:
+The application focuses on:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Secure login with API key + Bearer token
+- Cached dashboard data for fast page reloads
+- KPI cards and charts on the home page
+- Centralized filters loaded from `/api/dim/filtros`
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- TypeScript
+- Vite 8
+- Tailwind CSS 4
+- Axios
+- Recharts
+- React Router DOM
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Session persistence with token validation (`/api/me`)
+- Logout with session cleanup
+- Local cache strategy for API responses
+- Manual data refresh flow
+- Home charts generated from cached data
+- Filter UI hydrated from backend filter payload
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Environment Variables
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Create a `.env` file in the project root:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=/api
+VITE_API_KEY=your-api-key
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Notes:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `VITE_API_URL=/api` is used with Vite proxy in local development.
+- `VITE_API_KEY` is sent in `X-API-KEY` for all API requests.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Run Locally
+
+Install dependencies:
+
+```bash
+npm install
 ```
+
+Start development server:
+
+```bash
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+Preview build:
+
+```bash
+npm run preview
+```
+
+## API Contract Used by Frontend
+
+### Auth
+
+- `POST /api/login`
+- `GET /api/me`
+- `POST /api/logout`
+
+### Dashboard
+
+- `GET /api/producao/resumo`
+- `GET /api/producao/por-competencia`
+- `GET /api/producao/por-municipio`
+
+### Dimensions / Filters
+
+- `GET /api/dim/filtros`
+
+The filter bar consumes the `selects` and `inputs` payload to render options for:
+
+- `competencia_inicio`
+- `competencia_fim`
+- `uf`
+- `codigo_mun`
+- `cod_procedimento`
+- `codigo_cbo`
+- `cnes`
+- `ano`
+- `min_valor`
+- `max_valor`
+
+## Caching Strategy
+
+Two cache layers are used:
+
+1. Generic API cache in `localStorage` (keyed by endpoint + params + token)
+2. Home view cache (dedicated keys for cards and chart datasets)
+
+Behavior:
+
+- On page load, home reads cached data first.
+- If no cache exists, first load can seed data from API.
+- API calls are forced only when user clicks `Atualizar dados`.
+
+## Project Structure
+
+```text
+src/
+  components/
+    layout/
+    ui/
+  contexts/
+  pages/
+  services/
+  types/
+  utils/
+```
+
+## Security Notes
+
+- Token is stored in `sessionStorage`.
+- Cached analytical data is stored in `localStorage`.
+- On unauthorized (`401`), auth session is cleared and user is redirected to login.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
