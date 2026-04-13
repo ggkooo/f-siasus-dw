@@ -13,12 +13,12 @@ export default function Pagination({ currentPage, lastPage, total, perPage, onPa
   const to = Math.min(currentPage * perPage, total);
 
   return (
-    <div className="flex items-center justify-between">
-      <p className="text-xs text-gray-400">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <p className="text-xs text-gray-400 text-center sm:text-left">
         Exibindo <span className="font-medium text-gray-600">{from}–{to}</span> de{' '}
         <span className="font-medium text-gray-600">{total.toLocaleString('pt-BR')}</span> registros
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 self-center sm:self-auto">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
