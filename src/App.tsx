@@ -8,12 +8,14 @@ import CompetenciaPage from './pages/CompetenciaPage';
 import MunicipioPage from './pages/MunicipioPage';
 import ProcedimentoPage from './pages/ProcedimentoPage';
 import CBOPage from './pages/CBOPage';
+import MobileWarningModal from './components/ui/MobileWarningModal';
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <FilterProvider>
+          <MobileWarningModal />
           <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
