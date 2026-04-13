@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useFiltros } from '../contexts/FilterContext';
 import {
   FileText, MapPin, DollarSign, Stethoscope, RefreshCw, AlertCircle,
 } from 'lucide-react';
@@ -45,7 +46,7 @@ function writeOverviewCache<T>(kind: 'resumo' | 'competencia' | 'municipio', fil
 }
 
 export default function OverviewPage() {
-  const [filtros, setFiltros] = useState<FiltrosDashboard>({});
+  const { filtros, setFiltros } = useFiltros();
   const [resumo, setResumo] = useState<ResumoProducao | null>(null);
   const [loadingResumo, setLoadingResumo] = useState(true);
   const [loadingCharts, setLoadingCharts] = useState(true);
@@ -134,10 +135,14 @@ export default function OverviewPage() {
     total: item.total_registros,
   }));
 
-  const municipioChartData = porMunicipio.map((item) => ({
+  const municipioChartData = [...porMunicipio]
+    .sort((a, b) => b.total_registros - a.total_registros)
+    .slice(0, 10)
+    .map((item) => ({
     municipio: item.municipio_nome.length > 16 ? `${item.municipio_nome.slice(0, 16)}...` : item.municipio_nome,
+    municipioCompleto: item.municipio_nome,
     total: item.total_registros,
-  }));
+    }));
 
   return (
     <Layout
@@ -219,6 +224,19 @@ export default function OverviewPage() {
               <div className="h-[240px] flex items-center justify-center text-sm text-gray-400">
                 Sem dados em cache para este gráfico.
               </div>
+            ) : competenciaChartData.length === 1 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={competenciaChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="competencia" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => Intl.NumberFormat('pt-BR', { notation: 'compact' }).format(v)} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+                    formatter={(value) => [formatNumber(Number(value ?? 0)), 'Quantidade']}
+                  />
+                  <Bar dataKey="total" fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={56} />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <AreaChart data={competenciaChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -258,6 +276,7 @@ export default function OverviewPage() {
                   <YAxis type="category" dataKey="municipio" width={120} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <Tooltip
                     contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 8 }}
+                    labelFormatter={(_label, payload) => String(payload?.[0]?.payload?.municipioCompleto ?? '')}
                     formatter={(value) => [formatNumber(Number(value ?? 0)), 'Quantidade']}
                   />
                   <Bar dataKey="total" fill="#10b981" radius={[0, 5, 5, 0]} maxBarSize={18} />
