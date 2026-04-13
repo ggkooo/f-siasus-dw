@@ -37,7 +37,7 @@ export default function DataTable<T extends object>({
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
-                  className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-400 whitespace-nowrap ${alignClass(col.align)}`}
+                  className={`px-3 sm:px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-400 whitespace-nowrap ${alignClass(col.align)}`}
                 >
                   {col.header}
                 </th>
@@ -49,7 +49,7 @@ export default function DataTable<T extends object>({
               Array.from({ length: 6 }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
                   {columns.map((col) => (
-                    <td key={String(col.key)} className="px-4 py-3">
+                    <td key={String(col.key)} className="px-3 sm:px-4 py-3">
                       <div className="h-3.5 bg-gray-100 rounded w-3/4" />
                     </td>
                   ))}
@@ -57,7 +57,7 @@ export default function DataTable<T extends object>({
               ))
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-gray-400">
+                <td colSpan={columns.length} className="px-3 sm:px-4 py-10 text-center text-sm text-gray-400">
                   {emptyMessage}
                 </td>
               </tr>
@@ -67,7 +67,7 @@ export default function DataTable<T extends object>({
                   {columns.map((col) => (
                     <td
                       key={String(col.key)}
-                      className={`px-4 py-3 text-gray-700 whitespace-nowrap ${alignClass(col.align)}`}
+                      className={`px-3 sm:px-4 py-3 text-gray-700 whitespace-nowrap ${alignClass(col.align)}`}
                     >
                       {col.render
                         ? col.render(row)
