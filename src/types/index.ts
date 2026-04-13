@@ -137,7 +137,9 @@ export interface FiltrosDashboard {
   nome_mun?: string;
   uf?: string;
   codigo_cbo?: string;
+  nome_cbo?: string;
   cod_procedimento?: string;
+  nome_procedimento?: string;
   cnes?: string;
   min_valor?: number;
   max_valor?: number;
