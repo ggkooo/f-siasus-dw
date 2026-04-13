@@ -11,7 +11,7 @@ interface FilterBarProps {
 }
 
 // — Field wrapper ————————————————————————————————————————————————
-function Field({ label, children, width = 'min-w-[130px]' }: {
+function Field({ label, children, width = 'w-full sm:w-auto sm:min-w-[130px]' }: {
   label: string;
   children: React.ReactNode;
   width?: string;
@@ -29,7 +29,7 @@ function Field({ label, children, width = 'min-w-[130px]' }: {
 // — Section header ———————————————————————————————————————————————
 function Section({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 w-full mt-1">
+    <div className="col-span-full flex items-center gap-2 w-full mt-1">
       <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest whitespace-nowrap">
         {label}
       </span>
@@ -178,8 +178,8 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-visible">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center gap-2 flex-wrap">
           <SlidersHorizontal className="w-4 h-4 text-gray-400" />
           <span className="text-sm font-semibold text-gray-700">Filtros</span>
           {activeCount > 0 && (
@@ -188,7 +188,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           {activeCount > 0 && (
             <button
               type="button"
@@ -212,9 +212,9 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
 
       {/* Filter fields */}
       {isOpen && (
-      <div className="px-4 py-4 flex flex-wrap gap-x-4 gap-y-4">
+      <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <Section label="Período" />
-        <Field label="De" width="min-w-[130px]">
+        <Field label="De" width="w-full sm:w-auto sm:min-w-[130px]">
           <Select
             options={inicioOpts}
             value={value.competencia_inicio ?? ''}
@@ -223,7 +223,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             clearLabel="Todos"
           />
         </Field>
-        <Field label="Até" width="min-w-[130px]">
+        <Field label="Até" width="w-full sm:w-auto sm:min-w-[130px]">
           <Select
             options={fimOpts}
             value={value.competencia_fim ?? ''}
@@ -232,7 +232,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             clearLabel="Todos"
           />
         </Field>
-        <Field label="Ano" width="min-w-[88px]">
+        <Field label="Ano" width="w-full sm:w-auto sm:min-w-[88px]">
           <input
             type="text"
             inputMode="numeric"
@@ -245,7 +245,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
         </Field>
 
         <Section label="Localização" />
-        <Field label="UF" width="min-w-[96px]">
+        <Field label="UF" width="w-full sm:w-auto sm:min-w-[96px]">
           <Select
             options={ufOpts}
             value={value.uf ?? ''}
@@ -256,7 +256,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             clearLabel="Todas"
           />
         </Field>
-        <Field label="Município" width="min-w-[200px]">
+        <Field label="Município" width="w-full sm:w-auto sm:min-w-[200px]">
           <Select
             options={municipioOpts}
             value={value.codigo_mun ?? ''}
@@ -269,7 +269,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
         </Field>
 
         <Section label="Clínico" />
-        <Field label="Procedimento" width="min-w-[210px]">
+        <Field label="Procedimento" width="w-full sm:w-auto sm:min-w-[210px]">
           <Select
             options={procedimentoOpts}
             value={value.cod_procedimento ?? ''}
@@ -279,7 +279,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             searchable
           />
         </Field>
-        <Field label="CBO" width="min-w-[200px]">
+        <Field label="CBO" width="w-full sm:w-auto sm:min-w-[200px]">
           <Select
             options={cboOpts}
             value={value.codigo_cbo ?? ''}
@@ -289,7 +289,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             searchable
           />
         </Field>
-        <Field label="CNES" width="min-w-[140px]">
+        <Field label="CNES" width="w-full sm:w-auto sm:min-w-[140px]">
           <Select
             options={cnesOpts}
             value={value.cnes ?? ''}
@@ -301,7 +301,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
         </Field>
 
         <Section label="Valor" />
-        <Field label="Valor mínimo" width="min-w-[110px]">
+        <Field label="Valor mínimo" width="w-full sm:w-auto sm:min-w-[110px]">
           <input
             type="number"
             min={0}
@@ -311,7 +311,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             className={inputCx}
           />
         </Field>
-        <Field label="Valor máximo" width="min-w-[110px]">
+        <Field label="Valor máximo" width="w-full sm:w-auto sm:min-w-[110px]">
           <input
             type="number"
             min={0}
@@ -321,7 +321,7 @@ export default function FilterBar({ value, onChange }: FilterBarProps) {
             className={inputCx}
           />
         </Field>
-        <Field label="Sem custo" width="min-w-[96px]">
+        <Field label="Sem custo" width="w-full sm:w-auto sm:min-w-[96px]">
           <label className="flex items-center gap-2 h-[33px] cursor-pointer select-none">
             <div
               onClick={() => onChange({ ...value, sem_custo: value.sem_custo ? undefined : '1' })}
