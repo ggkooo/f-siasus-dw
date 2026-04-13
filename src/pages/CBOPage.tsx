@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useFiltros } from '../contexts/FilterContext';
 import Layout from '../components/layout/Layout';
 import DataTable from '../components/ui/DataTable';
 import Pagination from '../components/ui/Pagination';
@@ -41,24 +42,38 @@ const columns = [
 ];
 
 export default function CBOPage() {
-  const [filtros, setFiltros] = useState<FiltrosDashboard>({});
+  const { filtros, setFiltros } = useFiltros();
   const [page, setPage] = useState(1);
-  const [result, setResult] = useState<PaginatedResponse<ProducaoCBO> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<PaginatedResponse<ProducaoCBO>>(
+    () => producaoService.getPorCBOFromCache({ ...filtros, page: 1, per_page: 10 })
+  );
+  const [loading, setLoading] = useState(result.data.length === 0);
 
   useEffect(() => { setPage(1); }, [filtros]);
 
   useEffect(() => {
+    const params = { ...filtros, page, per_page: 10 };
+    const cached = producaoService.getPorCBOFromCache(params);
+    if (cached.data.length > 0) {
+      setResult(cached);
+      setLoading(false);
+      void producaoService.getPorCBO(params).then(setResult).catch(() => {});
+      return;
+    }
     setLoading(true);
-    producaoService.getPorCBO({ ...filtros, page, per_page: 10 })
+    void producaoService.getPorCBO(params)
       .then(setResult)
       .finally(() => setLoading(false));
   }, [filtros, page]);
 
-  const top10 = (result?.data ?? []).slice(0, 10).map((d) => ({
+  const top10 = [...result.data]
+    .sort((a, b) => b.total_registros - a.total_registros)
+    .slice(0, 10)
+    .map((d) => ({
     name: d.cbo_nome?.length > 22 ? d.cbo_nome.slice(0, 22) + '…' : d.cbo_nome,
+    fullName: d.cbo_nome,
     registros: d.total_registros,
-  }));
+    }));
 
   return (
     <Layout title="Produção por CBO" subtitle="Detalhamento por ocupação profissional (CBO)">
@@ -74,6 +89,7 @@ export default function CBOPage() {
                 <YAxis type="category" dataKey="name" width={180} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 8 }}
+                  labelFormatter={(_label, payload) => String(payload?.[0]?.payload?.fullName ?? '')}
                   formatter={(value) => [formatNumber(Number(value ?? 0)), 'Registros']}
                 />
                 <Bar dataKey="registros" fill="#f59e0b" radius={[0, 4, 4, 0]} maxBarSize={18} />
@@ -84,7 +100,7 @@ export default function CBOPage() {
 
         <DataTable
           columns={columns}
-          data={result?.data ?? []}
+          data={result.data}
           isLoading={loading}
           emptyMessage="Nenhum CBO encontrado."
           footer={
