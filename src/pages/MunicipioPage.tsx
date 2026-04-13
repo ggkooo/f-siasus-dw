@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useFiltros } from '../contexts/FilterContext';
 import Layout from '../components/layout/Layout';
@@ -5,7 +6,7 @@ import DataTable from '../components/ui/DataTable';
 import Pagination from '../components/ui/Pagination';
 import FilterBar from '../components/ui/FilterBar';
 import { producaoService } from '../services/api';
-import type { ProducaoMunicipio, FiltrosDashboard, PaginatedResponse } from '../types';
+import type { ProducaoMunicipio, PaginatedResponse } from '../types';
 import { formatCurrency, formatNumber } from '../utils/format';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ChartCard from '../components/ui/ChartCard';
@@ -49,19 +50,26 @@ const columns = [
 ];
 
 export default function MunicipioPage() {
+  const ITEMS_PER_PAGE = 25;
   const { filtros, setFiltros } = useFiltros();
   const [page, setPage] = useState(1);
+  const [nomeBusca, setNomeBusca] = useState('');
   const [result, setResult] = useState<PaginatedResponse<ProducaoMunicipio>>(
-    () => producaoService.getPorMunicipioFromCache({ ...filtros, page: 1, per_page: 10 })
+    () => producaoService.getPorMunicipioFromCache({ ...filtros, nome_mun: undefined, page: 1, per_page: ITEMS_PER_PAGE })
   );
   const [loading, setLoading] = useState(result.data.length === 0);
 
   useEffect(() => {
     setPage(1);
-  }, [filtros]);
+  }, [filtros, nomeBusca]);
 
   useEffect(() => {
-    const params = { ...filtros, page, per_page: 10 };
+    const params = {
+      ...filtros,
+      nome_mun: nomeBusca.trim() || undefined,
+      page,
+      per_page: ITEMS_PER_PAGE,
+    };
     const cached = producaoService.getPorMunicipioFromCache(params);
     if (cached.data.length > 0) {
       setResult(cached);
@@ -73,7 +81,7 @@ export default function MunicipioPage() {
     void producaoService.getPorMunicipio(params)
       .then(setResult)
       .finally(() => setLoading(false));
-  }, [filtros, page]);
+  }, [filtros, nomeBusca, page]);
 
   const top10 = [...result.data]
     .sort((a, b) => b.total_registros - a.total_registros)
@@ -83,6 +91,16 @@ export default function MunicipioPage() {
     fullName: d.municipio_nome,
     registros: d.total_registros,
     }));
+
+  const useServerPagination = result.last_page > 1 || result.total > result.data.length;
+  const localLastPage = Math.max(1, Math.ceil(result.data.length / ITEMS_PER_PAGE));
+  const effectiveLastPage = useServerPagination ? result.last_page : localLastPage;
+  const effectivePage = Math.min(page, effectiveLastPage);
+  const tableData = useServerPagination
+    ? result.data
+    : result.data.slice((effectivePage - 1) * ITEMS_PER_PAGE, effectivePage * ITEMS_PER_PAGE);
+  const effectiveTotal = useServerPagination ? result.total : result.data.length;
+  const effectivePerPage = useServerPagination ? result.per_page : ITEMS_PER_PAGE;
 
   return (
     <Layout title="Produção por Município" subtitle="Detalhamento da produção por município">
@@ -109,19 +127,34 @@ export default function MunicipioPage() {
 
         <DataTable
           columns={columns}
-          data={result.data}
+          data={tableData}
           isLoading={loading}
           emptyMessage="Nenhum município encontrado."
           footer={
-            result && result.last_page > 1 ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={nomeBusca}
+                    onChange={(e) => setNomeBusca(e.target.value)}
+                    placeholder="Buscar município por nome..."
+                    className="w-full rounded-lg border border-gray-200 bg-white pl-9 pr-3 py-2 text-sm text-gray-700 placeholder-gray-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15"
+                  />
+                </div>
+                <span className="text-xs text-gray-400 whitespace-nowrap">
+                  Máx. {ITEMS_PER_PAGE} por página
+                </span>
+              </div>
               <Pagination
-                currentPage={result.current_page}
-                lastPage={result.last_page}
-                total={result.total}
-                perPage={result.per_page}
+                currentPage={useServerPagination ? result.current_page : effectivePage}
+                lastPage={effectiveLastPage}
+                total={effectiveTotal}
+                perPage={effectivePerPage}
                 onPageChange={setPage}
               />
-            ) : undefined
+            </div>
           }
         />
       </div>
