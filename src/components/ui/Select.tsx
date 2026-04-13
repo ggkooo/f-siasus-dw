@@ -80,7 +80,7 @@ export default function Select({
 
       {open && (
         <div
-          className="absolute z-50 top-[calc(100%+6px)] left-0 min-w-full w-max max-w-[300px] bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+          className="absolute z-50 top-[calc(100%+6px)] left-0 w-full sm:min-w-full sm:w-max max-w-full sm:max-w-[320px] bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
           onKeyDown={handleKeyDown}
         >
           {searchable && (
