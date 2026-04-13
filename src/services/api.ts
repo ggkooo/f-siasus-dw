@@ -533,6 +533,28 @@ export const producaoService = {
     };
   },
 
+  getPorProcedimentoFromCache: (filtros?: FiltrosDashboard): PaginatedResponse<ProducaoProcedimento> => {
+    const data = getCachedData<unknown>('/producao/por-procedimento', filtros as Record<string, unknown> | undefined);
+    return data ? mapPaginated<ProducaoProcedimento>(data, mapPorProcedimento) : {
+      data: [],
+      current_page: 1,
+      last_page: 1,
+      per_page: 10,
+      total: 0,
+    };
+  },
+
+  getPorCBOFromCache: (filtros?: FiltrosDashboard): PaginatedResponse<ProducaoCBO> => {
+    const data = getCachedData<unknown>('/producao/por-cbo', filtros as Record<string, unknown> | undefined);
+    return data ? mapPaginated<ProducaoCBO>(data, mapPorCBO) : {
+      data: [],
+      current_page: 1,
+      last_page: 1,
+      per_page: 10,
+      total: 0,
+    };
+  },
+
   getResumo: async (
     filtros?: FiltrosDashboard,
     options?: {
@@ -587,12 +609,12 @@ export const producaoService = {
     );
     return mapPaginated<ProducaoMunicipio>(data, mapPorMunicipio);
   },
-  getPorProcedimento: async (filtros?: FiltrosDashboard): Promise<PaginatedResponse<ProducaoProcedimento>> => {
-    const data = await getWithCache('/producao/por-procedimento', filtros as Record<string, unknown> | undefined);
+  getPorProcedimento: async (filtros?: FiltrosDashboard, options?: { forceRefresh?: boolean }): Promise<PaginatedResponse<ProducaoProcedimento>> => {
+    const data = await getWithCache('/producao/por-procedimento', filtros as Record<string, unknown> | undefined, API_CACHE_TTL_MS, { forceRefresh: options?.forceRefresh });
     return mapPaginated<ProducaoProcedimento>(data, mapPorProcedimento);
   },
-  getPorCBO: async (filtros?: FiltrosDashboard): Promise<PaginatedResponse<ProducaoCBO>> => {
-    const data = await getWithCache('/producao/por-cbo', filtros as Record<string, unknown> | undefined);
+  getPorCBO: async (filtros?: FiltrosDashboard, options?: { forceRefresh?: boolean }): Promise<PaginatedResponse<ProducaoCBO>> => {
+    const data = await getWithCache('/producao/por-cbo', filtros as Record<string, unknown> | undefined, API_CACHE_TTL_MS, { forceRefresh: options?.forceRefresh });
     return mapPaginated<ProducaoCBO>(data, mapPorCBO);
   },
   getCompetencias: async (): Promise<Competencia[]> => {
