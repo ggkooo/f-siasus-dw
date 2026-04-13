@@ -28,7 +28,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="flex flex-col w-60 shrink-0 bg-white border-r border-gray-100 min-h-screen">
+    <aside className="sticky top-0 h-screen flex flex-col w-60 shrink-0 bg-white border-r border-gray-100">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-6 py-5 border-b border-gray-100">
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600">
@@ -41,7 +41,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-3">
+      <nav className="flex-1 py-4 px-3 overflow-y-auto">
         <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
           Produção
         </p>
