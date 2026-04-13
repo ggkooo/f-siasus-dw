@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useFiltros } from '../contexts/FilterContext';
 import Layout from '../components/layout/Layout';
 import DataTable from '../components/ui/DataTable';
 import Pagination from '../components/ui/Pagination';
@@ -48,26 +49,40 @@ const columns = [
 ];
 
 export default function MunicipioPage() {
-  const [filtros, setFiltros] = useState<FiltrosDashboard>({});
+  const { filtros, setFiltros } = useFiltros();
   const [page, setPage] = useState(1);
-  const [result, setResult] = useState<PaginatedResponse<ProducaoMunicipio> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<PaginatedResponse<ProducaoMunicipio>>(
+    () => producaoService.getPorMunicipioFromCache({ ...filtros, page: 1, per_page: 10 })
+  );
+  const [loading, setLoading] = useState(result.data.length === 0);
 
   useEffect(() => {
     setPage(1);
   }, [filtros]);
 
   useEffect(() => {
+    const params = { ...filtros, page, per_page: 10 };
+    const cached = producaoService.getPorMunicipioFromCache(params);
+    if (cached.data.length > 0) {
+      setResult(cached);
+      setLoading(false);
+      void producaoService.getPorMunicipio(params).then(setResult).catch(() => {});
+      return;
+    }
     setLoading(true);
-    producaoService.getPorMunicipio({ ...filtros, page, per_page: 10 })
+    void producaoService.getPorMunicipio(params)
       .then(setResult)
       .finally(() => setLoading(false));
   }, [filtros, page]);
 
-  const top10 = (result?.data ?? []).slice(0, 10).map((d) => ({
+  const top10 = [...result.data]
+    .sort((a, b) => b.total_registros - a.total_registros)
+    .slice(0, 10)
+    .map((d) => ({
     name: d.municipio_nome?.length > 16 ? d.municipio_nome.slice(0, 16) + '…' : d.municipio_nome,
+    fullName: d.municipio_nome,
     registros: d.total_registros,
-  }));
+    }));
 
   return (
     <Layout title="Produção por Município" subtitle="Detalhamento da produção por município">
@@ -83,6 +98,7 @@ export default function MunicipioPage() {
                 <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 8 }}
+                  labelFormatter={(_label, payload) => String(payload?.[0]?.payload?.fullName ?? '')}
                   formatter={(value) => [formatNumber(Number(value ?? 0)), 'Registros']}
                 />
                 <Bar dataKey="registros" fill="#8b5cf6" radius={[0, 4, 4, 0]} maxBarSize={18} />
@@ -93,7 +109,7 @@ export default function MunicipioPage() {
 
         <DataTable
           columns={columns}
-          data={result?.data ?? []}
+          data={result.data}
           isLoading={loading}
           emptyMessage="Nenhum município encontrado."
           footer={
