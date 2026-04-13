@@ -18,17 +18,23 @@ const navItems = [
   { to: '/cbo', icon: BriefcaseMedical, label: 'Por CBO' },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  className?: string;
+  onNavigate?: () => void;
+}
+
+export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
+    onNavigate?.();
     navigate('/login');
   };
 
   return (
-    <aside className="sticky top-0 h-screen flex flex-col w-60 shrink-0 bg-white border-r border-gray-100">
+    <aside className={`sticky top-0 h-screen flex flex-col w-60 shrink-0 bg-white border-r border-gray-100 ${className}`}>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-6 py-5 border-b border-gray-100">
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600">
@@ -51,6 +57,7 @@ export default function Sidebar() {
               <NavLink
                 to={to}
                 end={to === '/'}
+                onClick={onNavigate}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
