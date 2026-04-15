@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FiltrosDashboard, PaginatedResponse } from '../../types';
 
 interface UsePaginatedProductionParams<T> {
@@ -19,6 +19,7 @@ export function usePaginatedProduction<T>({
   getData,
 }: UsePaginatedProductionParams<T>) {
   const [page, setPage] = useState(1);
+  const requestVersionRef = useRef(0);
   const [result, setResult] = useState<PaginatedResponse<T>>(
     () => getFromCache({ ...filtros, [searchKey]: undefined, page: 1, per_page: perPage })
   );
@@ -29,6 +30,8 @@ export function usePaginatedProduction<T>({
   }, [filtros, searchValue]);
 
   useEffect(() => {
+    const requestVersion = ++requestVersionRef.current;
+
     const params = {
       ...filtros,
       [searchKey]: searchValue.trim() || undefined,
@@ -40,14 +43,28 @@ export function usePaginatedProduction<T>({
     if (cached.data.length > 0) {
       setResult(cached);
       setLoading(false);
-      void getData(params).then(setResult).catch(() => {});
+      void getData(params)
+        .then((next) => {
+          if (requestVersionRef.current === requestVersion) {
+            setResult(next);
+          }
+        })
+        .catch(() => {});
       return;
     }
 
     setLoading(true);
     void getData(params)
-      .then(setResult)
-      .finally(() => setLoading(false));
+      .then((next) => {
+        if (requestVersionRef.current === requestVersion) {
+          setResult(next);
+        }
+      })
+      .finally(() => {
+        if (requestVersionRef.current === requestVersion) {
+          setLoading(false);
+        }
+      });
   }, [filtros, searchValue, page, searchKey, perPage, getFromCache, getData]);
 
   const pagination = useMemo(() => {
