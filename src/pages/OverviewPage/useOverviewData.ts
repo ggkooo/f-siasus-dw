@@ -27,8 +27,10 @@ export function useOverviewData(filtros: FiltrosDashboard): OverviewState {
 
   const refreshResumo = async (silent = false) => {
     if (!silent) setIsRefreshing(true);
-    setLoadingResumo(true);
-    setLoadingCharts(true);
+    if (!silent) {
+      setLoadingResumo(true);
+      setLoadingCharts(true);
+    }
     setRefreshError(null);
 
     try {
@@ -96,11 +98,15 @@ export function useOverviewData(filtros: FiltrosDashboard): OverviewState {
     const hasMunicipioCache = resolvedMunicipio.length > 0;
     const hasAnyChartCache = hasCompetenciaCache || hasMunicipioCache;
 
-    if (hasResumoCache || hasAnyChartCache) {
+    if (hasResumoCache && hasAnyChartCache) {
       setLoadingResumo(false);
       setLoadingCharts(false);
       return;
     }
+
+    // Se houver cache parcial (ex.: resumo sem gráficos), atualiza silenciosamente.
+    setLoadingResumo(!hasResumoCache);
+    setLoadingCharts(!hasAnyChartCache);
 
     void refreshResumo(true);
   }, [filtros]);
