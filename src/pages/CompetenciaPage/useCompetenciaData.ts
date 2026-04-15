@@ -1,26 +1,44 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { producaoService } from '../../services/api';
 import type { FiltrosDashboard, ProducaoCompetencia } from '../../types';
 import { formatCompetencia } from '../../utils/format';
 
 export function useCompetenciaData(filtros: FiltrosDashboard, nomeBusca: string, itemsPerPage: number) {
   const [page, setPage] = useState(1);
+  const requestVersionRef = useRef(0);
   const [data, setData] = useState<ProducaoCompetencia[]>(() => producaoService.getPorCompetenciaFromCache(filtros));
   const [loading, setLoading] = useState(data.length === 0);
 
   useEffect(() => {
+    const requestVersion = ++requestVersionRef.current;
+
     const cached = producaoService.getPorCompetenciaFromCache(filtros);
     if (cached.length > 0) {
       setData(cached);
       setLoading(false);
-      void producaoService.getPorCompetencia(filtros).then(setData).catch(() => {});
+      void producaoService
+        .getPorCompetencia(filtros)
+        .then((next) => {
+          if (requestVersionRef.current === requestVersion) {
+            setData(next);
+          }
+        })
+        .catch(() => {});
       return;
     }
 
     setLoading(true);
     void producaoService.getPorCompetencia(filtros)
-      .then(setData)
-      .finally(() => setLoading(false));
+      .then((next) => {
+        if (requestVersionRef.current === requestVersion) {
+          setData(next);
+        }
+      })
+      .finally(() => {
+        if (requestVersionRef.current === requestVersion) {
+          setLoading(false);
+        }
+      });
   }, [filtros]);
 
   useEffect(() => {
